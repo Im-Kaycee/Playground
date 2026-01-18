@@ -179,8 +179,7 @@ function RequestBuilder() {
                       Sending Request
                     </>
                   ) : (
-                    <>
-                      <Send className="w-4 h-4" />
+                    <> 
                       Send Request
                     </>
                   )}
