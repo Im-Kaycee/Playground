@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Send, Loader2, AlertCircle, CheckCircle2, Clock, Code } from "lucide-react";
+import { Send, Loader2, AlertCircle, CheckCircle2, Clock, Code, LogOut } from "lucide-react";
 
-function RequestBuilder() {
+function RequestBuilder({ onLogout }) {
   const [url, setUrl] = useState("");
   const [method, setMethod] = useState("GET");
   const [body, setBody] = useState("");
@@ -21,10 +21,18 @@ function RequestBuilder() {
       const parsedHeaders = headers ? JSON.parse(headers) : {};
       const parsedBody = body ? JSON.parse(body) : null;
       
+      // Get token from localStorage
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
+      
       const res = await fetch("http://localhost:8000/api/proxy", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`, // Add Bearer token
         },
         body: JSON.stringify({
           method,
@@ -35,11 +43,30 @@ function RequestBuilder() {
       });
       
       const data = await res.json();
+      
+      // Handle authentication errors
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        onLogout();
+        throw new Error("Session expired. Please log in again.");
+      }
+      
+      if (!res.ok) {
+        throw new Error(data.detail?.error || data.detail || "Request failed");
+      }
+      
       setResponse(data);
     } catch (err) {
       setError(err.message || "Request failed");
     } finally {
       setLoading(false);
+    }
+  }
+
+  function handleLogout() {
+    if (confirm("Are you sure you want to log out?")) {
+      localStorage.removeItem("token");
+      onLogout();
     }
   }
 
@@ -66,12 +93,23 @@ function RequestBuilder() {
       {/* Header */}
       <div className="bg-neutral-950 border-b border-neutral-800">
         <div className="max-w-full px-6 py-4">
-          <div className="flex items-center gap-3">
-            <Code className="w-6 h-6 text-red-500" />
-            <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Playground</h1>
-              <p className="text-xs text-neutral-500 mt-0.5">Professional API Testing Tool</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Code className="w-6 h-6 text-red-500" />
+              <div>
+                <h1 className="text-xl font-bold text-white tracking-tight">Playground</h1>
+                <p className="text-xs text-neutral-500 mt-0.5">Professional API Testing Tool</p>
+              </div>
             </div>
+            
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-neutral-400 hover:text-red-500 hover:border-red-500 text-sm transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
           </div>
         </div>
       </div>
@@ -179,7 +217,7 @@ function RequestBuilder() {
                       Sending Request
                     </>
                   ) : (
-                    <> 
+                    <>
                       Send Request
                     </>
                   )}
@@ -202,8 +240,13 @@ function RequestBuilder() {
           {/* Right Panel - Response */}
           <div className="space-y-4">
             <div className="bg-neutral-950 rounded border border-neutral-800">
-              <div className="border-b border-neutral-800 px-6 py-3">
+              <div className="border-b border-neutral-800 px-6 py-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-white uppercase tracking-wide">Response</h2>
+                {response?.rate_limit && (
+                  <div className="text-xs text-neutral-500">
+                    Rate Limit: {response.rate_limit.remaining}/{response.rate_limit.limit}
+                  </div>
+                )}
               </div>
               
               <div className="p-6">
