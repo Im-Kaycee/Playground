@@ -3,7 +3,8 @@ from typing import Optional, List
 import datetime  
 from datetime import timezone, datetime 
 import os
-
+from sqlalchemy import Column
+from sqlalchemy.dialects.sqlite import JSON
 # Database URL - use environment variable in production
 DATABASE_URL = "sqlite:///./database.db"
 
@@ -40,6 +41,21 @@ class ProxyLog(SQLModel, table=True):
     
     # Relationship to user
     user: Optional[User] = Relationship(back_populates="proxy_logs")
+    
+class SavedRequest(SQLModel, table=True):
+    __tablename__ = "saved_requests"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+
+    name: str
+    method: str
+    url: str
+    headers: dict = Field(sa_column=Column(JSON))
+    body: dict | None = Field(default=None, sa_column=Column(JSON))
+
+    created_at: datetime = Field(default_factory=get_utc_now)
+
 
 
 # Dependency to get database session
