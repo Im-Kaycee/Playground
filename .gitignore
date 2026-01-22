@@ -4,3 +4,6 @@ backend/lib
 backend/lib64
 backend/pyvenv.cfg
 backend/App/__pycache__/
+backend/App/database.db
+
+
