@@ -4,6 +4,7 @@ import {
   History, ChevronDown, ChevronUp, Bookmark, BookmarkCheck, Play, Trash2, X 
 } from "lucide-react";
 import RateLimitTest from "./components/RateLimitTest";
+import OpenAPILoader from "./components/OpenApiLoader";
 function RequestBuilder({ onLogout }) {
   const [url, setUrl] = useState("");
   const [method, setMethod] = useState("GET");
@@ -17,6 +18,7 @@ function RequestBuilder({ onLogout }) {
   const [logsExpanded, setLogsExpanded] = useState(false);
   const [logsLoading, setLogsLoading] = useState(false);
   const [activeMainTab, setActiveMainTab] = useState("request"); 
+
   // Auth state
   const [authType, setAuthType] = useState("none");
   const [bearerToken, setBearerToken] = useState("");
@@ -144,7 +146,29 @@ function RequestBuilder({ onLogout }) {
       console.error("Failed to save request:", err);
     }
   }
-
+ function handleLoadEndpoint(endpoint, example = null) {
+  setMethod(endpoint.method);
+  setUrl(endpoint.url);
+  
+  // If a specific example was clicked, use that
+  if (example && example.value) {
+    setBody(JSON.stringify(example.value, null, 2));
+  } 
+  // Otherwise use the default example
+  else if (endpoint.requestBodyExample) {
+    setBody(JSON.stringify(endpoint.requestBodyExample, null, 2));
+  } 
+  // Or use the first example from the list
+  else if (endpoint.examples && endpoint.examples.length > 0 && endpoint.examples[0].value) {
+    setBody(JSON.stringify(endpoint.examples[0].value, null, 2));
+  } 
+  else {
+    setBody("");
+  }
+  
+  // Switch to request tab so user can see what was loaded
+  setActiveMainTab("request");
+}
   // Load saved request
   function loadRequest(savedReq) {
     setMethod(savedReq.method);
@@ -300,6 +324,7 @@ function RequestBuilder({ onLogout }) {
     if (status >= 500) return "text-red-700";
     return "text-neutral-400";
   };
+  
 
   return (
     <div className="min-h-screen bg-black">
@@ -540,6 +565,16 @@ function RequestBuilder({ onLogout }) {
             >
               Rate Limit Test
             </button>
+            <button
+                  onClick={() => setActiveMainTab("openapi")}
+                  className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                    activeMainTab === "openapi"
+                      ? "bg-neutral-900 text-red-500 border-b-2 border-red-500"
+                      : "text-neutral-400 hover:text-neutral-300"
+                  }`}
+                >
+                  OpenAPI Docs
+                </button>
           </div>
         </div>
 
@@ -882,6 +917,9 @@ function RequestBuilder({ onLogout }) {
         {/* Rate Limit Test Section */}
         {activeMainTab === "ratelimit" && (
           <RateLimitTest />
+        )}
+        {activeMainTab === "openapi" && (
+          <OpenAPILoader onLoadEndpoint={handleLoadEndpoint} />
         )}
       </div>
     </div>
