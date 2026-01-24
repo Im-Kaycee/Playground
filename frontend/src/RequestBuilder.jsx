@@ -3,7 +3,7 @@ import {
   Send, Loader2, AlertCircle, CheckCircle2, Clock, Code, LogOut, 
   History, ChevronDown, ChevronUp, Bookmark, BookmarkCheck, Play, Trash2, X 
 } from "lucide-react";
-
+import RateLimitTest from "./components/RateLimitTest";
 function RequestBuilder({ onLogout }) {
   const [url, setUrl] = useState("");
   const [method, setMethod] = useState("GET");
@@ -16,7 +16,7 @@ function RequestBuilder({ onLogout }) {
   const [logs, setLogs] = useState([]);
   const [logsExpanded, setLogsExpanded] = useState(false);
   const [logsLoading, setLogsLoading] = useState(false);
-  
+  const [activeMainTab, setActiveMainTab] = useState("request"); 
   // Auth state
   const [authType, setAuthType] = useState("none");
   const [bearerToken, setBearerToken] = useState("");
@@ -517,338 +517,372 @@ function RequestBuilder({ onLogout }) {
         </div>
 
         {/* Request/Response Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Panel - Request */}
-          <div className="space-y-4">
-            <div className="bg-neutral-950 rounded border border-neutral-800">
-              <div className="border-b border-neutral-800 px-6 py-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-white uppercase tracking-wide">Request</h2>
-                <button
-                  onClick={() => setShowSaveModal(true)}
-                  disabled={!url}
-                  className="p-2 rounded-full bg-neutral-800 hover:bg-red-600 text-neutral-400 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Save request"
-                >
-                  <Bookmark className="w-4 h-4" />
-                </button>
-              </div>
-              
-              <div className="p-6 space-y-4">
-                <div className="flex gap-2">
-                  <select
-                    value={method}
-                    onChange={(e) => setMethod(e.target.value)}
-                    className="px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-white font-medium text-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
-                  >
-                    <option>GET</option>
-                    <option>POST</option>
-                    <option>PUT</option>
-                    <option>PATCH</option>
-                    <option>DELETE</option>
-                  </select>
-                  
-                  <div className="flex-1">
-                    <input
-                      value={url}
-                      onChange={(e) => setUrl(e.target.value)}
-                      placeholder="https://api.example.com/endpoint"
-                      className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-white text-sm placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="border-b border-neutral-800">
-                  <div className="flex gap-6">
-                    <button
-                      onClick={() => setActiveTab("body")}
-                      className={`pb-2 px-1 text-sm font-medium transition-colors ${
-                        activeTab === "body"
-                          ? "text-red-500 border-b-2 border-red-500"
-                          : "text-neutral-400 hover:text-neutral-300"
-                      }`}
-                    >
-                      Body
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("headers")}
-                      className={`pb-2 px-1 text-sm font-medium transition-colors ${
-                        activeTab === "headers"
-                          ? "text-red-500 border-b-2 border-red-500"
-                          : "text-neutral-400 hover:text-neutral-300"
-                      }`}
-                    >
-                      Headers
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("auth")}
-                      className={`pb-2 px-1 text-sm font-medium transition-colors ${
-                        activeTab === "auth"
-                          ? "text-red-500 border-b-2 border-red-500"
-                          : "text-neutral-400 hover:text-neutral-300"
-                      }`}
-                    >
-                      Auth
-                    </button>
-                  </div>
-                </div>
-
-                {activeTab === "body" && (
-                  <div>
-                    <label className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wide">
-                      Request Body (JSON)
-                    </label>
-                    <textarea
-                      value={body}
-                      onChange={(e) => setBody(e.target.value)}
-                      placeholder='{\n  "key": "value"\n}'
-                      className="w-full px-3 py-3 bg-neutral-900 border border-neutral-700 rounded font-mono text-sm text-neutral-300 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 resize-none"
-                      rows={10}
-                    />
-                  </div>
-                )}
-
-                {activeTab === "headers" && (
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="block text-xs font-medium text-neutral-400 uppercase tracking-wide">
-                        Custom Headers
-                      </label>
-                      <button
-                        onClick={addHeader}
-                        className="text-xs text-red-500 hover:text-red-400 font-medium"
-                      >
-                        + Add Header
-                      </button>
-                    </div>
-                    <div className="space-y-2">
-                      {headersList.map((header, idx) => (
-                        <div key={idx} className="flex gap-2 items-center">
-                          <input
-                            type="checkbox"
-                            checked={header.enabled}
-                            onChange={(e) => updateHeader(idx, "enabled", e.target.checked)}
-                            className="w-4 h-4 rounded border-neutral-700 bg-neutral-900 text-red-600 focus:ring-red-500 focus:ring-offset-neutral-950"
-                          />
-                          <input
-                            type="text"
-                            value={header.key}
-                            onChange={(e) => updateHeader(idx, "key", e.target.value)}
-                            placeholder="Header name"
-                            className="flex-1 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-white text-sm placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
-                          />
-                          <input
-                            type="text"
-                            value={header.value}
-                            onChange={(e) => updateHeader(idx, "value", e.target.value)}
-                            placeholder="Value"
-                            className="flex-1 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-white text-sm placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
-                          />
-                          <button
-                            onClick={() => removeHeader(idx)}
-                            className="p-2 text-neutral-500 hover:text-red-500 transition-colors"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "auth" && (
-                  <div>
-                    <label className="block text-xs font-medium text-neutral-400 mb-3 uppercase tracking-wide">
-                      Authorization Type
-                    </label>
-                    <select
-                      value={authType}
-                      onChange={(e) => setAuthType(e.target.value)}
-                      className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 mb-4"
-                    >
-                      <option value="none">No Auth</option>
-                      <option value="bearer">Bearer Token</option>
-                    </select>
-
-                    {authType === "bearer" && (
-                      <div>
-                        <label className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wide">
-                          Bearer Token
-                        </label>
-                        <input
-                          type="text"
-                          value={bearerToken}
-                          onChange={(e) => setBearerToken(e.target.value)}
-                          placeholder="Enter your bearer token"
-                          className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-white text-sm placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
-                        />
-                        <p className="text-xs text-neutral-500 mt-2">
-                          This will be sent as: <span className="font-mono text-neutral-400">Authorization: Bearer [token]</span>
-                        </p>
-                      </div>
-                    )}
-
-                    {authType === "none" && (
-                      <div className="text-center py-8">
-                        <p className="text-neutral-500 text-sm">No authentication will be used</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <button
-                  onClick={sendRequest}
-                  disabled={loading || !url}
-                  className="w-full bg-red-600 hover:bg-red-700 disabled:bg-neutral-800 disabled:text-neutral-600 text-white font-semibold py-2.5 px-6 rounded transition-all duration-150 flex items-center justify-center gap-2 disabled:cursor-not-allowed text-sm uppercase tracking-wide"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Sending Request
-                    </>
-                  ) : (
-                    <>
-                      Send Request
-                    </>
-                  )}
-                </button>
-
-                {error && (
-                  <div className="flex items-start gap-3 p-4 bg-red-950 border border-red-800 rounded">
-                    <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-red-400 text-sm">Request Failed</p>
-                      <p className="text-xs text-red-300 mt-1">{error}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Panel - Response */}
-          <div className="space-y-4">
-            <div className="bg-neutral-950 rounded border border-neutral-800">
-              <div className="border-b border-neutral-800 px-6 py-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-white uppercase tracking-wide">Response</h2>
-                {response?.rate_limit && (
-                  <div className="text-xs text-neutral-500">
-                    Rate Limit: {response.rate_limit.remaining}/{response.rate_limit.limit}
-                  </div>
-                )}
-              </div>
-              
-              <div className="p-6">
-                {!response && !loading && (
-                  <div className="text-center py-20">
-                    <div className="w-14 h-14 bg-neutral-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-neutral-800">
-                      <Send className="w-6 h-6 text-neutral-600" />
-                    </div>
-                    <p className="text-neutral-400 font-medium text-sm">No Response</p>
-                    <p className="text-xs text-neutral-600 mt-1">Send a request to view the response</p>
-                  </div>
-                )}
-
-                {loading && (
-                  <div className="text-center py-20">
-                    <Loader2 className="w-10 h-10 text-red-500 animate-spin mx-auto mb-4" />
-                    <p className="text-neutral-400 font-medium text-sm">Awaiting Response</p>
-                  </div>
-                )}
-
-                {response && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="bg-neutral-900 rounded p-3 border border-neutral-800">
-                        <div className="flex items-center gap-2 mb-1">
-                          <CheckCircle2 className="w-3 h-3 text-neutral-500" />
-                          <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Status</p>
-                        </div>
-                        <p className={`text-xl font-bold ${getStatusColor(response.status)}`}>
-                          {response.status}
-                        </p>
-                      </div>
-
-                      <div className="bg-neutral-900 rounded p-3 border border-neutral-800">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Clock className="w-3 h-3 text-neutral-500" />
-                          <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Time</p>
-                        </div>
-                        <p className="text-xl font-bold text-white">
-                          {response.response_time}
-                          <span className="text-xs font-normal text-neutral-500 ml-1">ms</span>
-                        </p>
-                      </div>
-
-                      <div className="bg-neutral-900 rounded p-3 border border-neutral-800">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`w-2 h-2 rounded-full ${getMethodColor(method)}`}></span>
-                          <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Method</p>
-                        </div>
-                        <p className="text-xl font-bold text-white">{method}</p>
-                      </div>
-                    </div>
-
-                    <div className="border-b border-neutral-800">
-                      <div className="flex gap-6">
-                        <button
-                          onClick={() => setResponseTab("body")}
-                          className={`pb-2 px-1 text-sm font-medium transition-colors ${
-                            responseTab === "body"
-                              ? "text-red-500 border-b-2 border-red-500"
-                              : "text-neutral-400 hover:text-neutral-300"
-                          }`}
-                        >
-                          Body
-                        </button>
-                        <button
-                          onClick={() => setResponseTab("headers")}
-                          className={`pb-2 px-1 text-sm font-medium transition-colors ${
-                            responseTab === "headers"
-                              ? "text-red-500 border-b-2 border-red-500"
-                              : "text-neutral-400 hover:text-neutral-300"
-                          }`}
-                        >
-                          Headers
-                        </button>
-                      </div>
-                    </div>
-
-                    {responseTab === "body" && (
-                      <div>
-                        <label className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wide">
-                          Response Body
-                        </label>
-                        <div className="bg-neutral-900 rounded p-4 overflow-x-auto border border-neutral-800 max-h-96 overflow-y-auto">
-                          <pre className="text-xs text-neutral-300 font-mono leading-relaxed">
-                            {JSON.stringify(response.body, null, 2)}
-                          </pre>
-                        </div>
-                      </div>
-                    )}
-
-                    {responseTab === "headers" && (
-                      <div>
-                        <label className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wide">
-                          Response Headers
-                        </label>
-                        <div className="bg-neutral-900 rounded p-4 border border-neutral-800 max-h-96 overflow-y-auto">
-                          <div className="space-y-2">
-                            {Object.entries(response.headers).map(([key, value]) => (
-                              <div key={key} className="flex gap-2 text-xs font-mono">
-                                <span className="font-semibold text-red-400 min-w-fit">{key}:</span>
-                                <span className="text-neutral-400 break-all">{value}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+        {/* Main Tabs */}
+        <div className="bg-neutral-950 rounded border border-neutral-800 mb-6">
+          <div className="flex border-b border-neutral-800">
+            <button
+              onClick={() => setActiveMainTab("request")}
+              className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                activeMainTab === "request"
+                  ? "bg-neutral-900 text-red-500 border-b-2 border-red-500"
+                  : "text-neutral-400 hover:text-neutral-300"
+              }`}
+            >
+              API Request
+            </button>
+            <button
+              onClick={() => setActiveMainTab("ratelimit")}
+              className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                activeMainTab === "ratelimit"
+                  ? "bg-neutral-900 text-red-500 border-b-2 border-red-500"
+                  : "text-neutral-400 hover:text-neutral-300"
+              }`}
+            >
+              Rate Limit Test
+            </button>
           </div>
         </div>
+
+        {/* Request/Response Section */}
+        {activeMainTab === "request" && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Panel - Request */}
+            <div className="space-y-4">
+              <div className="bg-neutral-950 rounded border border-neutral-800">
+                <div className="border-b border-neutral-800 px-6 py-3 flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-white uppercase tracking-wide">Request</h2>
+                  <button
+                    onClick={() => setShowSaveModal(true)}
+                    disabled={!url}
+                    className="p-2 rounded-full bg-neutral-800 hover:bg-red-600 text-neutral-400 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Save request"
+                  >
+                    <Bookmark className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <div className="p-6 space-y-4">
+                  <div className="flex gap-2">
+                    <select
+                      value={method}
+                      onChange={(e) => setMethod(e.target.value)}
+                      className="px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-white font-medium text-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                    >
+                      <option>GET</option>
+                      <option>POST</option>
+                      <option>PUT</option>
+                      <option>PATCH</option>
+                      <option>DELETE</option>
+                    </select>
+                    
+                    <div className="flex-1">
+                      <input
+                        value={url}
+                        onChange={(e) => setUrl(e.target.value)}
+                        placeholder="https://api.example.com/endpoint"
+                        className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-white text-sm placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="border-b border-neutral-800">
+                    <div className="flex gap-6">
+                      <button
+                        onClick={() => setActiveTab("body")}
+                        className={`pb-2 px-1 text-sm font-medium transition-colors ${
+                          activeTab === "body"
+                            ? "text-red-500 border-b-2 border-red-500"
+                            : "text-neutral-400 hover:text-neutral-300"
+                        }`}
+                      >
+                        Body
+                      </button>
+                      <button
+                        onClick={() => setActiveTab("headers")}
+                        className={`pb-2 px-1 text-sm font-medium transition-colors ${
+                          activeTab === "headers"
+                            ? "text-red-500 border-b-2 border-red-500"
+                            : "text-neutral-400 hover:text-neutral-300"
+                        }`}
+                      >
+                        Headers
+                      </button>
+                      <button
+                        onClick={() => setActiveTab("auth")}
+                        className={`pb-2 px-1 text-sm font-medium transition-colors ${
+                          activeTab === "auth"
+                            ? "text-red-500 border-b-2 border-red-500"
+                            : "text-neutral-400 hover:text-neutral-300"
+                        }`}
+                      >
+                        Auth
+                      </button>
+                    </div>
+                  </div>
+
+                  {activeTab === "body" && (
+                    <div>
+                      <label className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wide">
+                        Request Body (JSON)
+                      </label>
+                      <textarea
+                        value={body}
+                        onChange={(e) => setBody(e.target.value)}
+                        placeholder='{\n  "key": "value"\n}'
+                        className="w-full px-3 py-3 bg-neutral-900 border border-neutral-700 rounded font-mono text-sm text-neutral-300 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 resize-none"
+                        rows={10}
+                      />
+                    </div>
+                  )}
+
+                  {activeTab === "headers" && (
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="block text-xs font-medium text-neutral-400 uppercase tracking-wide">
+                          Custom Headers
+                        </label>
+                        <button
+                          onClick={addHeader}
+                          className="text-xs text-red-500 hover:text-red-400 font-medium"
+                        >
+                          + Add Header
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        {headersList.map((header, idx) => (
+                          <div key={idx} className="flex gap-2 items-center">
+                            <input
+                              type="checkbox"
+                              checked={header.enabled}
+                              onChange={(e) => updateHeader(idx, "enabled", e.target.checked)}
+                              className="w-4 h-4 rounded border-neutral-700 bg-neutral-900 text-red-600 focus:ring-red-500 focus:ring-offset-neutral-950"
+                            />
+                            <input
+                              type="text"
+                              value={header.key}
+                              onChange={(e) => updateHeader(idx, "key", e.target.value)}
+                              placeholder="Header name"
+                              className="flex-1 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-white text-sm placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                            />
+                            <input
+                              type="text"
+                              value={header.value}
+                              onChange={(e) => updateHeader(idx, "value", e.target.value)}
+                              placeholder="Value"
+                              className="flex-1 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-white text-sm placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                            />
+                            <button
+                              onClick={() => removeHeader(idx)}
+                              className="p-2 text-neutral-500 hover:text-red-500 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === "auth" && (
+                    <div>
+                      <label className="block text-xs font-medium text-neutral-400 mb-3 uppercase tracking-wide">
+                        Authorization Type
+                      </label>
+                      <select
+                        value={authType}
+                        onChange={(e) => setAuthType(e.target.value)}
+                        className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 mb-4"
+                      >
+                        <option value="none">No Auth</option>
+                        <option value="bearer">Bearer Token</option>
+                      </select>
+
+                      {authType === "bearer" && (
+                        <div>
+                          <label className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wide">
+                            Bearer Token
+                          </label>
+                          <input
+                            type="text"
+                            value={bearerToken}
+                            onChange={(e) => setBearerToken(e.target.value)}
+                            placeholder="Enter your bearer token"
+                            className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded text-white text-sm placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                          />
+                          <p className="text-xs text-neutral-500 mt-2">
+                            This will be sent as: <span className="font-mono text-neutral-400">Authorization: Bearer [token]</span>
+                          </p>
+                        </div>
+                      )}
+
+                      {authType === "none" && (
+                        <div className="text-center py-8">
+                          <p className="text-neutral-500 text-sm">No authentication will be used</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={sendRequest}
+                    disabled={loading || !url}
+                    className="w-full bg-red-600 hover:bg-red-700 disabled:bg-neutral-800 disabled:text-neutral-600 text-white font-semibold py-2.5 px-6 rounded transition-all duration-150 flex items-center justify-center gap-2 disabled:cursor-not-allowed text-sm uppercase tracking-wide"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Sending Request
+                      </>
+                    ) : (
+                      <>
+                        Send Request
+                      </>
+                    )}
+                  </button>
+
+                  {error && (
+                    <div className="flex items-start gap-3 p-4 bg-red-950 border border-red-800 rounded">
+                      <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-red-400 text-sm">Request Failed</p>
+                        <p className="text-xs text-red-300 mt-1">{error}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Panel - Response */}
+            <div className="space-y-4">
+              <div className="bg-neutral-950 rounded border border-neutral-800">
+                <div className="border-b border-neutral-800 px-6 py-3 flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-white uppercase tracking-wide">Response</h2>
+                  {response?.rate_limit && (
+                    <div className="text-xs text-neutral-500">
+                      Rate Limit: {response.rate_limit.remaining}/{response.rate_limit.limit}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="p-6">
+                  {!response && !loading && (
+                    <div className="text-center py-20">
+                      <div className="w-14 h-14 bg-neutral-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-neutral-800">
+                        <Send className="w-6 h-6 text-neutral-600" />
+                      </div>
+                      <p className="text-neutral-400 font-medium text-sm">No Response</p>
+                      <p className="text-xs text-neutral-600 mt-1">Send a request to view the response</p>
+                    </div>
+                  )}
+
+                  {loading && (
+                    <div className="text-center py-20">
+                      <Loader2 className="w-10 h-10 text-red-500 animate-spin mx-auto mb-4" />
+                      <p className="text-neutral-400 font-medium text-sm">Awaiting Response</p>
+                    </div>
+                  )}
+
+                  {response && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="bg-neutral-900 rounded p-3 border border-neutral-800">
+                          <div className="flex items-center gap-2 mb-1">
+                            <CheckCircle2 className="w-3 h-3 text-neutral-500" />
+                            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Status</p>
+                          </div>
+                          <p className={`text-xl font-bold ${getStatusColor(response.status)}`}>
+                            {response.status}
+                          </p>
+                        </div>
+
+                        <div className="bg-neutral-900 rounded p-3 border border-neutral-800">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Clock className="w-3 h-3 text-neutral-500" />
+                            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Time</p>
+                          </div>
+                          <p className="text-xl font-bold text-white">
+                            {response.response_time}
+                            <span className="text-xs font-normal text-neutral-500 ml-1">ms</span>
+                          </p>
+                        </div>
+
+                        <div className="bg-neutral-900 rounded p-3 border border-neutral-800">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`w-2 h-2 rounded-full ${getMethodColor(method)}`}></span>
+                            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Method</p>
+                          </div>
+                          <p className="text-xl font-bold text-white">{method}</p>
+                        </div>
+                      </div>
+
+                      <div className="border-b border-neutral-800">
+                        <div className="flex gap-6">
+                          <button
+                            onClick={() => setResponseTab("body")}
+                            className={`pb-2 px-1 text-sm font-medium transition-colors ${
+                              responseTab === "body"
+                                ? "text-red-500 border-b-2 border-red-500"
+                                : "text-neutral-400 hover:text-neutral-300"
+                            }`}
+                          >
+                            Body
+                          </button>
+                          <button
+                            onClick={() => setResponseTab("headers")}
+                            className={`pb-2 px-1 text-sm font-medium transition-colors ${
+                              responseTab === "headers"
+                                ? "text-red-500 border-b-2 border-red-500"
+                                : "text-neutral-400 hover:text-neutral-300"
+                            }`}
+                          >
+                            Headers
+                          </button>
+                        </div>
+                      </div>
+
+                      {responseTab === "body" && (
+                        <div>
+                          <label className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wide">
+                            Response Body
+                          </label>
+                          <div className="bg-neutral-900 rounded p-4 overflow-x-auto border border-neutral-800 max-h-96 overflow-y-auto">
+                            <pre className="text-xs text-neutral-300 font-mono leading-relaxed">
+                              {JSON.stringify(response.body, null, 2)}
+                            </pre>
+                          </div>
+                        </div>
+                      )}
+
+                      {responseTab === "headers" && (
+                        <div>
+                          <label className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wide">
+                            Response Headers
+                          </label>
+                          <div className="bg-neutral-900 rounded p-4 border border-neutral-800 max-h-96 overflow-y-auto">
+                            <div className="space-y-2">
+                              {Object.entries(response.headers).map(([key, value]) => (
+                                <div key={key} className="flex gap-2 text-xs font-mono">
+                                  <span className="font-semibold text-red-400 min-w-fit">{key}:</span>
+                                  <span className="text-neutral-400 break-all">{value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Rate Limit Test Section */}
+        {activeMainTab === "ratelimit" && (
+          <RateLimitTest />
+        )}
       </div>
     </div>
   );
