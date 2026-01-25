@@ -2,8 +2,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 import httpx
 from urllib.parse import urlparse
-from auth.auth import get_current_user
-from models.models import User
+from App.auth.auth import get_current_user
+from App.models.models import User
 
 router = APIRouter(prefix="/api", tags=["openapi"])
 

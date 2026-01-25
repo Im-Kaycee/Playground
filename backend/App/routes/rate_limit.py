@@ -1,9 +1,9 @@
 import asyncio
 import httpx
 from fastapi import APIRouter, Depends
-from models.models import *
-from auth.auth import get_current_user
-from schemas.rate_limit import RateLimitTestRequest, RateLimitTestResult
+from App.models.models import *
+from App.auth.auth import get_current_user
+from App.schemas.rate_limit import RateLimitTestRequest, RateLimitTestResult
 
 router = APIRouter(prefix="/api", tags=["rate-limit"])
 async def send_request(client, payload):

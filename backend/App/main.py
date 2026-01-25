@@ -1,10 +1,10 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes.proxy import router as proxy_router
-from routes.auth import router as auth_router
-from routes.rate_limit import router as rate_limit_router
-from routes.open_api import router as openapi_router 
+from App.routes.proxy import router as proxy_router
+from App.routes.auth import router as auth_router
+from App.routes.rate_limit import router as rate_limit_router
+from App.routes.open_api import router as openapi_router 
 app = FastAPI()
 
 app.add_middleware(

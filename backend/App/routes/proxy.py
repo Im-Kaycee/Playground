@@ -1,12 +1,12 @@
 import time
 import httpx
 from fastapi import APIRouter, HTTPException, Depends
-from auth.auth import get_current_user
-from models.models import *
-from schemas.proxy import *
+from App.auth.auth import get_current_user
+from App.models.models import *
+from App.schemas.proxy import *
 from sqlmodel import Session
-from models.models import get_session
-from models.models import ProxyLog
+from App.models.db import get_session
+from App.models.models import ProxyLog
 
 router = APIRouter(prefix="/api", tags=["proxy"])
 def generate_name(method: str, url: str) -> str:
@@ -67,7 +67,7 @@ async def proxy_request(payload: ProxyRequest, current_user: User = Depends(get_
     )
 
 from sqlmodel import select
-from schemas.logs import LogEntry
+from App.schemas.logs import LogEntry
 @router.get("/proxy/logs", response_model=list[LogEntry])
 async def get_proxy_logs(
     current_user: User = Depends(get_current_user),

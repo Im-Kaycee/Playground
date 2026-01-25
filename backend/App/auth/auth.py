@@ -5,7 +5,8 @@ from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel import Session, select
-from models.models import User, get_session
+from App.models.models import User
+from App.models.db import get_session
 import os
 import hashlib
 # Configuration

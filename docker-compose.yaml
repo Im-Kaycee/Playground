@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/App
+    environment:
+      - DATABASE_URL=sqlite:////app/App/database.db
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    stdin_open: true # Required for React scripts to stay alive
+    environment:
+      - CHOKIDAR_USEPOLLING=true # Helps with hot-reload on Windows
