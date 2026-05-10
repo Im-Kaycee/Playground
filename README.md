@@ -61,7 +61,7 @@ A modern, full-featured API testing platform built with React and FastAPI. Test 
 The easiest way to get Playground running is using Docker. This automatically handles database migrations, environment setup, and service orchestration.
 **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/playground.git
+git clone https://github.com/im-kaycee/playground.git
 cd playground/
 ```
 ### 1. Prerequisites
@@ -85,7 +85,7 @@ Frontend will be available at  `http://localhost:5173`
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/playground.git
+git clone https://github.com/im-kaycee/playground.git
 cd playground/backend
 ```
 
